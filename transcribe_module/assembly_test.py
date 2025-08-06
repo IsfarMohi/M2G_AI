@@ -1,22 +1,20 @@
 import assemblyai as aai
 
-# Set your API key
-aai.settings.api_key = "555d5de0e22049af92a0a6ea7d934abd"
+aai.settings.api_key = "f31459fc0dbe4172aaf5da7d2bedf585"
 
-# Create transcriber instance
 transcriber = aai.Transcriber()
 
 def transcribe():
-    # Transcribe with speaker diarization
-    transcript = transcriber.transcribe(
-        r"upload\F_1201_12y11m_1.mp3",
-        config=aai.TranscriptionConfig(
-            speaker_labels=True  # enables speaker separation
+    try:
+        transcript = transcriber.transcribe(
+            "upload\F_1201_12y11m_1.mp3",
+            config=aai.TranscriptionConfig(speaker_labels=True)
         )
-    )
-    print(transcript.text)
-    for utterance in transcript.utterances:
-        print(f"Speaker {utterance.speaker}: {utterance.text}")
 
-# Call the function to run transcription
-transcribe()
+        return {
+            "full_transcript": transcript.text,
+            
+        }
+
+    except Exception as e:
+        return {"error": str(e)}

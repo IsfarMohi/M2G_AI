@@ -9,7 +9,7 @@ transcriber = aai.Transcriber()
 def transcribe():
     # Transcribe with speaker diarization
     transcript = transcriber.transcribe(
-        r"upload\F_1201_12y11m_1.mp3",
+        r"upload\2025-03-27 Planning Meeting.mp3",
         config=aai.TranscriptionConfig(
             speaker_labels=True  # enables speaker separation
         )

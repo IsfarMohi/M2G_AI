@@ -1,6 +1,7 @@
 venv/
 ollama_env/
 upload/
+uploads/
 #audio files
 *.mp3
 *.wav

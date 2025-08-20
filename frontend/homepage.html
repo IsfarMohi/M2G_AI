@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>M2G AI – Audio Summarizer</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 0; }
+      header { padding: 16px 24px; border-bottom: 1px solid #ddd; }
+      main { max-width: 760px; margin: 32px auto; padding: 0 16px; }
+      .card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+      .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+      .btn { background: #2563eb; color: white; border: 0; border-radius: 10px; padding: 10px 16px; font-weight: 600; cursor: pointer; }
+      .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+      .muted { color: #6b7280; font-size: 0.95rem; }
+      .summary { white-space: pre-wrap; line-height: 1.6; font-size: 1rem; }
+      progress { width: 100%; height: 16px; }
+      footer { text-align: center; color: #6b7280; font-size: 0.9rem; padding: 24px 0; }
+      .error { color: #b91c1c; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h2>M2G AI – Audio Summarizer</h2>
+    </header>
+    <main>
+      <div class="card">
+        <p class="muted">Upload an .mp3 or .wav file (under 10MB). We will transcribe and summarize it.</p>
+        <div class="row" style="margin-top: 8px;">
+          <input id="fileInput" type="file" accept=".mp3,.wav,audio/*" />
+          <button id="uploadBtn" class="btn">Upload & Summarize</button>
+        </div>
+        <div id="status" class="muted" style="margin-top: 12px;"></div>
+        <progress id="progress" max="100" value="0" style="display:none;"></progress>
+      </div>
+
+      <div class="card" style="margin-top: 24px; display: none;" id="resultCard">
+        <h3>Summary</h3>
+        <div id="summary" class="summary"></div>
+      </div>
+
+      <div class="card" style="margin-top: 24px; display:none;" id="errorCard">
+        <h3 class="error">Error</h3>
+        <div id="errorText" class="summary"></div>
+      </div>
+    </main>
+    <footer>
+      <div>Thank you for using M2G AI!</div>
+    </footer>
+
+    <script>
+      const uploadBtn = document.getElementById('uploadBtn');
+      const fileInput = document.getElementById('fileInput');
+      const statusEl = document.getElementById('status');
+      const progressEl = document.getElementById('progress');
+      const resultCard = document.getElementById('resultCard');
+      const errorCard = document.getElementById('errorCard');
+      const summaryEl = document.getElementById('summary');
+      const errorTextEl = document.getElementById('errorText');
+
+      function setStatus(text) {
+        statusEl.textContent = text;
+      }
+
+      function showError(message) {
+        errorCard.style.display = 'block';
+        resultCard.style.display = 'none';
+        errorTextEl.textContent = message || 'Unknown error';
+      }
+
+      function showSummary(text) {
+        resultCard.style.display = 'block';
+        errorCard.style.display = 'none';
+        summaryEl.textContent = text;
+      }
+
+      uploadBtn.addEventListener('click', async () => {
+        const file = fileInput.files?.[0];
+        if (!file) {
+          showError('Please select an audio file first.');
+          return;
+        }
+        // Optional: size guard in UI
+        if (file.size > 10 * 1024 * 1024) {
+          showError('File too large. Must be under 10MB.');
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        progressEl.style.display = 'block';
+        progressEl.value = 10;
+        setStatus('Uploading and processing…');
+        uploadBtn.disabled = true;
+
+        try {
+          const response = await fetch('/process-audio', {
+            method: 'POST',
+            body: formData
+          });
+
+          progressEl.value = 70;
+          const data = await response.json();
+          progressEl.value = 90;
+
+          if (!response.ok) {
+            throw new Error(data?.error || 'Request failed');
+          }
+
+          if (data?.error) {
+            showError(data.error);
+          } else if (data?.summary) {
+            showSummary(data.summary);
+            setStatus('Done.');
+          } else {
+            showError('Unexpected response from server.');
+          }
+        } catch (err) {
+          showError(err.message);
+        } finally {
+          progressEl.value = 100;
+          uploadBtn.disabled = false;
+          setTimeout(() => { progressEl.style.display = 'none'; progressEl.value = 0; }, 500);
+        }
+      });
+    </script>
+  </body>
+  </html>
+
+
